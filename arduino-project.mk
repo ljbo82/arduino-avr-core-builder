@@ -92,5 +92,9 @@ flash: hex
     ifeq ($(PORT), )
 	    $(error Missing PORT)
     endif
-	$(v) avrdude -C/etc/avrdude.conf -v -p$(BUILD_MCU) -carduino -P$(PORT) -Uflash:w:$(BUILD_DIR)/$(basename $(buildArtifact)).hex):i
+	$(v) avrdude -C/etc/avrdude.conf -v -p$(BUILD_MCU) -carduino -P$(PORT) -Uflash:w:$(BUILD_DIR)/$(basename $(buildArtifact)).hex:i
+
+.PHONY: dist
+dist: hex
+	$(error Not supported yet)
 
