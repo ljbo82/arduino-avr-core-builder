@@ -1,4 +1,4 @@
-# Copyright 2020 Leandro José Britto de Oliveira
+# Copyright 2021 Leandro José Britto de Oliveira
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 #* you may not use this file except in compliance with the License.
@@ -12,29 +12,97 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Arduino AVR Core library  (project Makefile)
+# Arduino AVR Core library  (avr-core builder)
 
-PROJECT_NAME := arduino-core
-PROJECT_TYPE := lib
+CORE_GIT_REPO ?= https://github.com/arduino/ArduinoCore-avr.git
+coreSrcDir := core
 
-__clone_dir__ := core-src
-
-SRC_DIRS += $(__clone_dir__)/cores/arduino
-
-CORE_LIB_GIT_REPO ?= https://github.com/arduino/ArduinoCore-avr.git
-
-ifeq ($(wildcard $(__clone_dir__)/.git), )
-    $(info Clonning core library repository...)
-    $(shell sh -c "git clone -q $(CORE_LIB_GIT_REPO) $(__clone_dir__)")
+ifeq ($(BOARD), )
+    BOARD := uno
 endif
 
-ifneq ($(CORE_LIB_VERSION), )
-    __success__ := $(shell sh -c "cd $(__clone_dir__) && git checkout -q tags/$(CORE_LIB_VERSION) && echo $$?")
-    ifneq ($(__success__), 0)
-        $(error Invalid CORE_LIB_VERSION: $(CORE_LIB_VERSION))
+ifeq ($(wildcard boards/$(BOARD).mk), )
+    $(error Unsupported BOARD: $(BOARD))
+endif
+
+include boards/$(BOARD).mk
+
+ifeq ($(BUILD_MCU), )
+    $(error Missing BUILD_MCU)
+endif
+
+ifeq ($(BUILD_F_CPU), )
+    $(error Missing BUILD_F_CPU)
+endif
+
+ifeq ($(BUILD_BOARD), )
+    $(error Missing BUILD_BOARD)
+endif
+
+ifeq ($(BUILD_ARCH), )
+    $(error Missing BUILD_ARCH)
+endif
+
+ifeq ($(VARIANT), )
+    $(error Missing VARIANT)
+endif
+
+ifeq ($(wildcard $(coreSrcDir)/.git), )
+    $(info Cloning core source code...)
+    success := $(shell git clone -q $(CORE_GIT_REPO) $(coreSrcDir) && echo $$?)
+    ifneq ($(success), 0)
+        $(error)
     endif
 endif
 
-PROJECT_VERSION := $(shell cd $(__clone_dir__) && git describe --tags)
+ifneq ($(CORE_VERSION), )
+    success := $(shell cd $(coreSrcDir) && git checkout -q tags/$(CORE_VERSION) && echo $$?)
+    ifneq ($(success), 0)
+        $(error Invalid CORE_VERSION: $(CORE_VERSION))
+    endif
+else
+    CORE_VERSION := $(shell cd $(coreSrcDir) && git describe --tags)
+endif
 
-include project.mk
+distBase := dist
+distDir  := $(distBase)/$(CORE_VERSION)/$(BOARD)
+
+# Project definition
+compilerFlags := -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+
+PROJ_NAME    := arduino-core
+PROJ_TYPE    := lib
+LIB_TYPE     := static
+BUILD_BASE   := build
+BUILD_DIR    := $(BUILD_BASE)/$(CORE_VERSION)/$(BOARD)
+SRC_DIRS     += $(coreSrcDir)/cores/arduino
+INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
+PROJ_VERSION := $(CORE_VERSION)
+GCC_PREFIX   := avr
+CC           := gcc
+AS           := gcc
+
+override PRE_CLEAN += rm -rf $(distBase);
+override CFLAGS    += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
+override CXXFLAGS  += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
+override ASFLAGS   += -x assembler-with-cpp -MMD $(compilerFlags)
+override LDFLAGS   += -Os -flto -fuse-linker-plugin -Wl,--gc-sections
+
+include make/c-cpp-posix.mk
+
+.PHONY: update
+update: $(coreSrcDir)/.git
+	cd $(coreSrcDir); git checkout master && git pull
+
+.PHONY: board-list
+list-boards:
+	@find boards -maxdepth 1 -type f | grep boards/ | xargs -I{} basename {} .mk
+
+.PHONY: install
+install: all
+	$(v)mkdir -p $(distDir)/lib
+	$(v)mkdir -p $(distDir)/include
+	$(v)cp -a $(BUILD_DIR)/libarduino-core*.a* $(distDir)/lib
+	$(v)cp -a $(coreSrcDir)/cores/arduino/*.h $(distDir)/include
+	$(v)cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(distDir)/include
+

@@ -1,0 +1,3 @@
+[submodule "mk-gcc-project"]
+	path = make
+	url = ../mk-gcc-project.git
