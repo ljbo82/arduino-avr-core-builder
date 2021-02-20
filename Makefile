@@ -95,11 +95,11 @@ update: $(coreSrcDir)/.git
 	cd $(coreSrcDir); git checkout master && git pull
 
 .PHONY: board-list
-list-boards:
+board-list:
 	@find boards -maxdepth 1 -type f | grep boards/ | xargs -I{} basename {} .mk
 
-.PHONY: install
-install: all
+.PHONY: dist
+dist: all
 	$(v)mkdir -p $(distDir)/lib
 	$(v)mkdir -p $(distDir)/include
 	$(v)cp -a $(BUILD_DIR)/libarduino-core*.a* $(distDir)/lib
