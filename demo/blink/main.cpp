@@ -20,10 +20,6 @@ void setup() {
 }
 
 void loop() {
-	static bool state = true;
-
-	digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
-	delay(1000);
-	state = !state;
+	digitalWrite(LED_BUILTIN, HIGH);
 }
 

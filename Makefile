@@ -86,13 +86,22 @@ override PRE_CLEAN += rm -rf $(distBase);
 override CFLAGS    += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
 override CXXFLAGS  += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
 override ASFLAGS   += -x assembler-with-cpp -MMD $(compilerFlags)
-override LDFLAGS   += -Os -flto -fuse-linker-plugin -Wl,--gc-sections
+
+ifeq ($(DEBUG), 0)
+    override LDFLAGS += -Os -flto -fuse-linker-plugin
+endif
+
+override LDFLAGS += -Wl,--gc-sections
 
 include make/c-cpp-posix.mk
 
+.PHONY: clean-all
+clean-all: clean
+	$(v)rm -rf $(coreSrcDir)
+
 .PHONY: update
 update: $(coreSrcDir)/.git
-	cd $(coreSrcDir); git checkout master && git pull
+	$(v)cd $(coreSrcDir); git checkout master && git pull
 
 .PHONY: board-list
 board-list:

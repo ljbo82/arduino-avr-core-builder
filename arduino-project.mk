@@ -64,37 +64,43 @@ AS           := gcc
 
 override INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
 
+ifeq ($(DEBUG), 0)
+    override LDFLAGS += -Os -flto -fuse-linker-plugin
+endif
+
 ifeq ($(PROJ_TYPE), lib)
     override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
     override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
     override ASFLAGS  += -x assembler-with-cpp -MMD $(compilerFlags)
-    override LDFLAGS  += -Os -flto -fuse-linker-plugin -Wl,--gc-sections
+    override LDFLAGS  += -Wl,--gc-sections
 else
     # app
     override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags) -flto -fno-fat-lto-objects
     override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD -flto $(compilerFlags)
     override ASFLAGS  += -x assembler-with-cpp -flto -MMD $(compilerFlags)
-    override LDFLAGS  += -Os -flto -fuse-linker-plugin -Wl,--gc-sections -L$(coreLibDir) -l$(coreLibName) -lm
+    override LDFLAGS  += -Wl,--gc-sections -L$(coreLibDir) -l$(coreLibName) -lm
 endif
 
 include $(selfDir)make/c-cpp-posix.mk
 
-.PHONY: hex
-hex: all
+$(basename $(buildArtifact)).hex: $(buildArtifact)
     ifeq ($(PROJ_TYPE), lib)
 	    $(error Hex file generation does not apply to a library)
     endif
 	@printf "$(nl)[HEX] $(buildArtifact)\n"
-	$(v)avr-objcopy -O ihex -R .eeprom $(buildArtifact) $(basename $(buildArtifact)).hex
+	$(v)avr-objcopy -O ihex -R .eeprom $(buildArtifact) $@
 
 .PHONY: flash
-flash: hex
+flash: $(basename $(buildArtifact)).hex
+    ifeq ($(PROJ_TYPE), lib)
+	    $(error Flash does not apply to a library)
+    endif
     ifeq ($(PORT), )
 	    $(error Missing PORT)
     endif
-	$(v) avrdude -C/etc/avrdude.conf -v -p$(BUILD_MCU) -carduino -P$(PORT) -Uflash:w:$(BUILD_DIR)/$(basename $(buildArtifact)).hex:i
+	$(v) avrdude -C/etc/avrdude.conf -v -p$(BUILD_MCU) -carduino -P$(PORT) -Uflash:w:$(basename $(buildArtifact)).hex:i
 
 .PHONY: dist
-dist: hex
+dist: $(basename $(buildArtifact)).hex
 	$(error Not supported yet)
 
