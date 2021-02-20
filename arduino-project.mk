@@ -15,18 +15,18 @@
 # Base Makfile for projects based on Arduino AVR core library
 
 selfDir      := $(dir $(lastword $(MAKEFILE_LIST)))
-coreSrcDir   := $(selfDir)/core
-coreDistBase := $(selfDir)/dist
+coreSrcDir   := $(selfDir)core
+coreDistBase := $(selfDir)dist
 
 ifeq ($(BOARD), )
     $(error Missing BOARD)
 endif
 
-ifeq ($(wildcard $(selfDir)/boards/$(BOARD).mk), )
+ifeq ($(wildcard $(selfDir)boards/$(BOARD).mk), )
     $(error Unsupported BOARD: $(BOARD))
 endif
 
-include $(selfDir)/boards/$(BOARD).mk
+include $(selfDir)boards/$(BOARD).mk
 
 ifeq ($(wildcard $(coreSrcDir)/.git), )
     $(info Cloning core source code...)
@@ -43,10 +43,10 @@ else
     coreDistDir := $(coreDistBase)/$(CORE_VERSION)/$(BOARD)
     coreLibDir := $(coreDistDir)/lib
     coreLibName := arduino-core$(coreVersionMajor)
-    coreLibFilename := lib$(coreLibName)$(coreVersionMajor).a
+    coreLibFilename := lib$(coreLibName).a
     ifeq ($(wildcard $(coreLibDir)/$(coreLibFilename)), )
         $(info Creating core distribution (BOARD: $(BOARD), version: $(CORE_VERSION))...)
-        success := $(shell $(MAKE) -C $(selfDir) BOARD=$(BOARD) CORE_VERSION=$(CORE_VERSION) install && echo $$?)
+        success := $(shell $(MAKE) -C $(selfDir) BOARD=$(BOARD) CORE_VERSION=$(CORE_VERSION) dist && echo $$?)
         ifneq ($(success), 0)
             $(error)
         endif
@@ -62,7 +62,6 @@ GCC_PREFIX   := avr
 CC           := gcc
 AS           := gcc
 
-override SRC_DIRS     += $(coreSrcDir)/cores/arduino
 override INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
 
 ifeq ($(PROJ_TYPE), lib)
@@ -78,7 +77,7 @@ else
     override LDFLAGS  += -Os -flto -fuse-linker-plugin -Wl,--gc-sections -L$(coreLibDir) -l$(coreLibName) -lm
 endif
 
-include c-cpp-project-posix.mk
+include $(selfDir)make/c-cpp-posix.mk
 
 .PHONY: hex
 hex: all
