@@ -64,8 +64,10 @@ AS           := gcc
 
 override INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
 
-ifeq ($(DEBUG), 0)
+ifneq ($(DEBUG), 0)
     override LDFLAGS += -Os -flto -fuse-linker-plugin
+    override CFLAGS += -Os
+    override CXXFLAGS += -Os
 endif
 
 ifeq ($(PROJ_TYPE), lib)
