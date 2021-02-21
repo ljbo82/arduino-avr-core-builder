@@ -60,8 +60,8 @@ override LDFLAGS  += -Os -Wl,--gc-sections
 
 PROJ_TYPE    ?= app
 LIB_TYPE     ?= static
-BUILD_BASE   := build
-BUILD_DIR    := $(BUILD_BASE)/$(CORE_VERSION)/$(BOARD)
+BUILD_BASE   ?= build
+BUILD_DIR    := $(BUILD_BASE)/$(BOARD)/$(CORE_VERSION)
 GCC_PREFIX   := avr
 CC           := gcc
 AS           := gcc
