@@ -53,7 +53,27 @@ else
     endif
 endif
 
-compilerFlags := -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+ifneq ($(DEBUG), 0)
+    override CFLAGS   += -Os
+    override CXXFLAGS += -Os
+    override LDFLAGS  += -Os -flto -fuse-linker-plugin
+endif
+
+override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections
+override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing
+override ASFLAGS  += -x assembler-with-cpp
+override LDFLAGS  += -Wl,--gc-sections
+
+ifeq ($(PROJ_TYPE), app)
+    override CFLAGS   += -flto -fno-fat-lto-objects
+    override CXXFLAGS += -flto
+    override ASFLAGS  += -flto
+    override LDFLAGS  += -L$(coreLibDir) -l$(coreLibName) -lm
+endif
+
+override CFLAGS   += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+override CXXFLAGS += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+override ASFLAGS  += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
 
 LIB_TYPE     := static
 BUILD_BASE   := build
@@ -63,26 +83,6 @@ CC           := gcc
 AS           := gcc
 
 override INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
-
-ifneq ($(DEBUG), 0)
-    override LDFLAGS += -Os -flto -fuse-linker-plugin
-    override CFLAGS += -Os
-    override CXXFLAGS += -Os
-endif
-
-ifeq ($(PROJ_TYPE), lib)
-    override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
-    override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
-    override ASFLAGS  += -x assembler-with-cpp -MMD $(compilerFlags)
-    override LDFLAGS  += -Wl,--gc-sections
-else
-    # app
-    override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags) -flto -fno-fat-lto-objects
-    override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD -flto $(compilerFlags)
-    override ASFLAGS  += -x assembler-with-cpp -flto -MMD $(compilerFlags)
-    override LDFLAGS  += -Wl,--gc-sections -L$(coreLibDir) -l$(coreLibName) -lm
-endif
-
 include $(selfDir)make/c-cpp-posix.mk
 
 $(basename $(buildArtifact)).hex: $(buildArtifact)
