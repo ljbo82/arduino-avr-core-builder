@@ -53,22 +53,16 @@ else
     endif
 endif
 
-ifneq ($(DEBUG), 0)
-    override CFLAGS   += -Os
-    override CXXFLAGS += -Os
-    override LDFLAGS  += -Os -flto -fuse-linker-plugin
-endif
-
-override CFLAGS   += -std=gnu11 -ffunction-sections -fdata-sections
-override CXXFLAGS += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing
+override CFLAGS   += -Os -std=gnu11 -ffunction-sections -fdata-sections
+override CXXFLAGS += -Os -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing
 override ASFLAGS  += -x assembler-with-cpp
-override LDFLAGS  += -Wl,--gc-sections
+override LDFLAGS  += -Os -Wl,--gc-sections
 
 ifeq ($(PROJ_TYPE), app)
     override CFLAGS   += -flto -fno-fat-lto-objects
     override CXXFLAGS += -flto
     override ASFLAGS  += -flto
-    override LDFLAGS  += -L$(coreLibDir) -l$(coreLibName) -lm
+    override LDFLAGS  += -flto -fuse-linker-plugin -L$(coreLibDir) -l$(coreLibName) -lm
 endif
 
 override CFLAGS   += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)

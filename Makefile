@@ -68,8 +68,6 @@ distBase := dist
 distDir  := $(distBase)/$(CORE_VERSION)/$(BOARD)
 
 # Project definition
-compilerFlags := -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
-
 PROJ_NAME    := arduino-core
 PROJ_TYPE    := lib
 LIB_TYPE     := static
@@ -82,20 +80,16 @@ GCC_PREFIX   := avr
 CC           := gcc
 AS           := gcc
 
-ifneq ($(DEBUG), 0)
-    override LDFLAGS += -Os -flto -fuse-linker-plugin
-    override CFLAGS += -Os
-    override CXXFLAGS += -Os
-endif
+CFLAGS   += -Os -std=gnu11 -ffunction-sections -fdata-sections
+CXXFLAGS += -Os -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing
+ASFLAGS  += -x assembler-with-cpp
+LDFLAGS  += -Os -Wl,--gc-sections
 
-override PRE_CLEAN += rm -rf $(distBase);
-override CFLAGS    += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
-override CXXFLAGS  += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
-override ASFLAGS   += -x assembler-with-cpp -MMD $(compilerFlags)
+CFLAGS   += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+CXXFLAGS += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+ASFLAGS  += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
 
-
-
-override LDFLAGS += -Wl,--gc-sections
+PRE_CLEAN += rm -rf $(distBase);
 
 include make/c-cpp-posix.mk
 
