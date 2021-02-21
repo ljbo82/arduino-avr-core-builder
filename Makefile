@@ -82,14 +82,18 @@ GCC_PREFIX   := avr
 CC           := gcc
 AS           := gcc
 
+ifneq ($(DEBUG), 0)
+    override LDFLAGS += -Os -flto -fuse-linker-plugin
+    override CFLAGS += -Os
+    override CXXFLAGS += -Os
+endif
+
 override PRE_CLEAN += rm -rf $(distBase);
 override CFLAGS    += -std=gnu11 -ffunction-sections -fdata-sections -MMD $(compilerFlags)
 override CXXFLAGS  += -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -Wno-error=narrowing -MMD $(compilerFlags)
 override ASFLAGS   += -x assembler-with-cpp -MMD $(compilerFlags)
 
-ifeq ($(DEBUG), 0)
-    override LDFLAGS += -Os -flto -fuse-linker-plugin
-endif
+
 
 override LDFLAGS += -Wl,--gc-sections
 
