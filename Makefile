@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Arduino AVR Core library  (avr-core builder)
+# Arduino AVR Core library builder
+
+BUILDER_VERSION := 0.1.0
 
 CORE_GIT_REPO ?= https://github.com/arduino/ArduinoCore-avr.git
 coreSrcDir := core
@@ -65,9 +67,14 @@ else
 endif
 
 distBase := dist
-distDir  := $(distBase)/$(CORE_VERSION)/$(BOARD)
 
-# Project definition
+distBinDir  := $(distBase)/bin/$(BOARD)/$(CORE_VERSION)
+distBinPackageName := arduino-avr-core-$(BOARD)-$(CORE_VERSION).tar.gz
+
+distSrcDir  := $(distBase)/src
+distSrcPackageName := arduino-avr-core-builder-$(BUILDER_VERSION).tar.gz
+
+# C/C++ project definition
 PROJ_NAME    := arduino-core
 PROJ_TYPE    := lib
 LIB_TYPE     := static
@@ -105,11 +112,21 @@ update: $(coreSrcDir)/.git
 board-list:
 	@find boards -maxdepth 1 -type f | grep boards/ | xargs -I{} basename {} .mk
 
-.PHONY: dist
-dist: all
-	$(v)mkdir -p $(distDir)/lib
-	$(v)mkdir -p $(distDir)/include
-	$(v)cp -a $(BUILD_DIR)/libarduino-core*.a* $(distDir)/lib
-	$(v)cp -a $(coreSrcDir)/cores/arduino/*.h $(distDir)/include
-	$(v)cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(distDir)/include
+.PHONY: dist-bin
+dist-bin: all
+	$(v)mkdir -p $(distBinDir)/lib
+	$(v)mkdir -p $(distBinDir)/include
+	$(v)cp -a $(BUILD_DIR)/libarduino-core*.a* $(distBinDir)/lib
+	$(v)cp -a $(coreSrcDir)/cores/arduino/*.h $(distBinDir)/include
+	$(v)cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(distBinDir)/include
+	$(v)mkdir -p $(distBinDir)/tmp/arduino-avr-core-$(BOARD); \
+        cp -R $(distBinDir)/include $(distBinDir)/tmp/arduino-avr-core-$(BOARD); \
+        cp -R $(distBinDir)/lib $(distBinDir)/tmp/arduino-avr-core-$(BOARD); \
+        tar -C $(distBinDir)/tmp -zcf $(distBase)/bin/$(distBinPackageName) arduino-avr-core-$(BOARD); \
+        rm -rf $(distBinDir)/tmp
+ 
+.PHONY: dist-src
+dist-src:
+	$(v)mkdir -p $(distSrcDir)
+	$(v)git archive --format=tar.gz -o$(distSrcDir)/$(distSrcPackageName) HEAD
 
