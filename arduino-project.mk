@@ -103,7 +103,3 @@ flash: $(basename $(buildArtifact)).hex
     endif
 	$(v) avrdude -C/etc/avrdude.conf -v -p$(BUILD_MCU) -carduino -P$(PORT) -Uflash:w:$(basename $(buildArtifact)).hex:i
 
-.PHONY: dist
-dist: $(basename $(buildArtifact)).hex
-	$(error Not supported yet)
-
