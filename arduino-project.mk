@@ -40,13 +40,13 @@ ifeq ($(CORE_VERSION), )
     $(error Missing CORE_VERSION)
 else
     coreVersionMajor := $(shell echo $(CORE_VERSION) | cut -d'.' -f1)
-    coreDistDir := $(coreDistBase)/$(CORE_VERSION)/$(BOARD)
+    coreDistDir := $(coreDistBase)/bin/$(BOARD)/$(CORE_VERSION)
     coreLibDir := $(coreDistDir)/lib
     coreLibName := arduino-core$(coreVersionMajor)
     coreLibFilename := lib$(coreLibName).a
     ifeq ($(wildcard $(coreLibDir)/$(coreLibFilename)), )
         $(info Creating core distribution (BOARD: $(BOARD), version: $(CORE_VERSION))...)
-        success := $(shell $(MAKE) -C $(selfDir) BOARD=$(BOARD) CORE_VERSION=$(CORE_VERSION) dist && echo $$?)
+        success := $(shell $(MAKE) -C $(selfDir) BOARD=$(BOARD) CORE_VERSION=$(CORE_VERSION) dist-bin && echo $$?)
         ifneq ($(success), 0)
             $(error)
         endif
