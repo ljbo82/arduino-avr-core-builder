@@ -58,23 +58,30 @@ override CXXFLAGS += -Os -std=gnu++11 -fpermissive -fno-exceptions -ffunction-se
 override ASFLAGS  += -x assembler-with-cpp
 override LDFLAGS  += -Os -Wl,--gc-sections
 
-ifeq ($(PROJ_TYPE), app)
-    override CFLAGS   += -flto -fno-fat-lto-objects
-    override CXXFLAGS += -flto
-    override ASFLAGS  += -flto
-    override LDFLAGS  += -flto -fuse-linker-plugin -L$(coreLibDir) -l$(coreLibName) -lm
-endif
-
-override CFLAGS   += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
-override CXXFLAGS += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
-override ASFLAGS  += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
-
-LIB_TYPE     := static
+PROJ_TYPE    ?= app
+LIB_TYPE     ?= static
 BUILD_BASE   := build
 BUILD_DIR    := $(BUILD_BASE)/$(CORE_VERSION)/$(BOARD)
 GCC_PREFIX   := avr
 CC           := gcc
 AS           := gcc
+
+ifeq ($(PROJ_TYPE), lib)
+    ifeq ($(LIB_TYPE), shared)
+        $(error Shared libraries are not supported in arduino platform)
+    endif
+endif
+
+ifeq ($(PROJ_TYPE), app)
+    override CFLAGS   += -flto -fno-fat-lto-objects
+    override CXXFLAGS += -flto
+    override ASFLAGS  += -flto
+    override LDFLAGS  += -flto -fuse-linker-plugin -mmcu=$(BUILD_MCU) -L$(coreLibDir) -l$(coreLibName) -lm
+endif
+
+override CFLAGS   += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+override CXXFLAGS += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
+override ASFLAGS  += -mmcu=$(BUILD_MCU) -DF_CPU=$(BUILD_F_CPU) -DARDUINO=$(CORE_VERSION) -DARDUINO_$(BUILD_BOARD) -DARDUINO_ARCH_$(BUILD_ARCH)
 
 override INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
 include $(selfDir)make/c-cpp-posix.mk
