@@ -14,7 +14,7 @@
 
 PROJ_NAME    := blink
 BOARD        ?= uno
-CORE_VERSION := 1.8.3
+CORE_VERSION ?= 1.8.3
 SRC_DIRS     += .
 
 include ../../arduino-project.mk
