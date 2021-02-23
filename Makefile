@@ -16,7 +16,9 @@
 
 BUILDER_VERSION := 0.1.0
 
-CORE_GIT_REPO ?= https://github.com/arduino/ArduinoCore-avr.git
+ifeq ($(CORE_GIT_REPO), )
+    CORE_GIT_REPO := https://github.com/arduino/ArduinoCore-avr.git
+endif
 coreSrcDir := core
 
 ifeq ($(wildcard $(coreSrcDir)/.git), )
@@ -36,7 +38,9 @@ else
     CORE_VERSION := $(shell cd $(coreSrcDir) && git describe --tags)
 endif
 
-BOARD ?= uno
+ifeq ($(BOARD), )
+    BOARD := uno
+endif
 ifeq ($(BOARD), )
     $(error Missing BOARD)
 endif
@@ -49,15 +53,21 @@ include arduino-gcc-project-builder/boards/$(BOARD).mk
 
 PROJ_NAME    := arduino-core
 PROJ_TYPE    := lib
-BUILD_BASE   ?= build
-BUILD_DIR    := $(BUILD_BASE)/$(BOARD)/$(CORE_VERSION)
-DIST_BASE    ?= dist
-DIST_DIR     := $(DIST_BASE)/$(BOARD)/$(CORE_VERSION)
 SRC_DIRS     += $(coreSrcDir)/cores/arduino
 INCLUDE_DIRS += $(coreSrcDir)/variants/$(VARIANT) $(coreSrcDir)/cores
 PROJ_VERSION := $(CORE_VERSION)
 
-override POST_DIST += mkdir -p $(DIST_DIR)/include; cp -a $(coreSrcDir)/cores/arduino/*.h $(DIST_DIR)/include; cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(DIST_DIR)/include;
+ifeq ($(BUILD_BASE), )
+    BUILD_BASE := build
+endif
+BUILD_DIR := $(BOARD)/$(CORE_VERSION)
+
+ifeq ($(DIST_BASE), )
+    DIST_BASE := dist
+endif
+DIST_DIR := $(BOARD)/$(CORE_VERSION)
+
+POST_DIST += mkdir -p $(DIST_BASE)/$(DIST_DIR)/include; cp -a $(coreSrcDir)/cores/arduino/*.h $(DIST_BASE)/$(DIST_DIR)/include; cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(DIST_BASE)/$(DIST_DIR)/include;
 
 include arduino-gcc-project-builder/posix-arduino-project.mk
 
