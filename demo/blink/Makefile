@@ -13,8 +13,20 @@
 # limitations under the License.
 
 PROJ_NAME    := blink
-BOARD        ?= uno
-CORE_VERSION ?= 1.8.3
+PROJ_VERSION := 0.1.0
 SRC_DIRS     += .
 
-include ../../arduino-project.mk
+BOARD           ?= uno
+CORE_VERSION    ?= 1.8.3
+coreLibName     := arduino-core1
+coreLibDistDir  := ../../dist/$(BOARD)/$(CORE_VERSION)
+coreLibFilePath := $(coreLibDistDir)/lib/lib$(coreLibName).a
+
+PRE_BUILD_DEPS += $(coreLibFilePath)
+LDFLAGS        += -L$(coreLibDistDir)/lib -l$(coreLibName) -lm
+INCLUDE_DIRS   += $(coreLibDistDir)/include
+
+include ../../arduino-gcc-project-builder/posix-arduino-project.mk
+
+$(coreLibFilePath):
+	$(MAKE) -C ../.. dist CORE_VERSION=$(CORE_VERSION) BOARD=$(BOARD)

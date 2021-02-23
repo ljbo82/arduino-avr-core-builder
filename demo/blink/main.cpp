@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <arduino/Arduino.h>
+#include <Arduino.h>
 
 void setup() {
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -23,6 +23,6 @@ void loop() {
 	static bool state = false;
 	digitalWrite(LED_BUILTIN, state ? LOW : HIGH);
 	state = !state;
-	delay(1000);
+	delay(100);
 }
 
