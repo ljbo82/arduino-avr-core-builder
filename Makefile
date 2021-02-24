@@ -67,11 +67,17 @@ ifeq ($(DIST_BASE), )
 endif
 DIST_DIR := $(BOARD)/$(CORE_VERSION)
 
-POST_DIST += mkdir -p $(DIST_BASE)/$(DIST_DIR)/include; cp -a $(coreSrcDir)/cores/arduino/*.h $(DIST_BASE)/$(DIST_DIR)/include; cp -a $(coreSrcDir)/variants/$(VARIANT)/*.h $(DIST_BASE)/$(DIST_DIR)/include;
+srcHeaders   := $(shell find $(coreSrcDir)/cores -type f -name *.h -or -name *.hpp 2> /dev/null) $(shell find $(coreSrcDir)/variants/$(VARIANT) -type f -name *.h -or -name *.hpp 2> /dev/null)
+distHeaders  := $(foreach srcHeader, $(srcHeaders), $(DIST_BASE)/$(DIST_DIR)/include/arduino/$(notdir $(srcHeader)))
+POST_DIST_DEPS := $(distHeaders)
 
 include arduino-gcc-project-builder/posix-arduino-project.mk
 
 .PHONY: update
 update: $(coreSrcDir)/.git
-	$(v)cd $(coreSrcDir); git checkout master && git pull
+	$(_v_)cd $(coreSrcDir); git checkout master && git pull
+
+$(POST_DIST_DEPS): $(srcHeaders)
+	$(_v_)mkdir -p $(DIST_BASE)/$(DIST_DIR)/include/arduino
+	$(_v_)cp -a $< $@
 

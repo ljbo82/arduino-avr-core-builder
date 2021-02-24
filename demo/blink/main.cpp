@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <Arduino.h>
+#include <arduino/Arduino.h>
 
 void setup() {
 	pinMode(LED_BUILTIN, OUTPUT);
